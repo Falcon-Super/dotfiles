@@ -1,0 +1,39 @@
+[user]
+	name  = Salman Almuzaini
+	email = salmanium.dev@gmail.com
+
+[core]
+	editor = hx
+
+[init]
+	defaultBranch = main
+
+[pull]
+	rebase = false
+
+[push]
+	autoSetupRemote = true
+
+[diff]
+	colorMoved = default
+	external = delta
+
+[merge]
+	conflictstyle = diff3
+
+[credential]
+	helper = "!gh auth git-credential"
+
+[interactive]
+	diffFilter = delta --color-only
+
+[delta]
+	navigate     = true
+	light        = false
+	line-numbers = true
+	side-by-side = true
+
+[delta "decorations"]
+	commit-decoration-style = bold yellow box ul
+	file-style              = bold yellow ul
+	file-decoration-style   = none

@@ -1,0 +1,31 @@
+theme = "catppuccin_mocha"
+
+[editor]
+line-number = "relative"
+mouse = false
+bufferline = "multiple"
+
+[editor.soft-wrap]
+enable = true
+
+[editor.cursor-shape]
+insert = "bar"
+normal = "block"
+select = "underline"
+
+[editor.lsp]
+display-messages = true
+
+[editor.indent-guides]
+render = true
+character = "┊"
+
+[editor.statusline]
+left   = ["mode", "spinner", "file-name"]
+center = ["diagnostics"]
+right  = ["selections", "position", "file-type"]
+
+[keys.normal.space]
+w = ":w"
+q = ":q"
+x = ":wq"
