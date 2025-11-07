@@ -150,7 +150,7 @@ package_installation() {
     
     # System Monitoring and Utilities
     log_info "Adding system utilities and monitoring tools..."
-    PACKAGES+=(btop bat fd tealdeer fzf jq yq vsv vpm)
+    PACKAGES+=(btop bat fd tealdeer fzf jq yq vsv vpm zellij podman podman-compose containers-common container.image containers.storage podman-tui tree)
     log_debug "btop: Resource monitor"
     log_debug "bat: Cat clone with syntax highlighting"
     log_debug "fd: Simple and fast alternative to find"
