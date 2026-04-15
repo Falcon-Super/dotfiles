@@ -1,0 +1,138 @@
+---
+# Fixed for Ansible 2.14+ (Homebrew version)
+# All deprecated variables replaced, parameters corrected.
+
+- name: "Configure Bluefin Linux Workstation"
+  hosts: localhost
+  connection: local
+  become: false
+  gather_facts: yes
+
+  vars:
+    home_dir: "{{ lookup('env', 'HOME') }}"
+    dotfiles_dir: "{{ home_dir }}/dotfiles"
+    brew_bin: "/home/linuxbrew/.linuxbrew/bin/brew"
+    zsh_dir: "{{ home_dir }}/.oh-my-zsh"
+    zsh_custom: "{{ zsh_dir }}/custom"
+    atuin_init: 'eval "$(atuin init zsh)"'
+
+    dotfiles_symlinks:
+      - src: "{{ dotfiles_dir }}/dot_zshrc"
+        dest: "{{ home_dir }}/.zshrc"
+      - src: "{{ dotfiles_dir }}/dot_gitconfig"
+        dest: "{{ home_dir }}/.gitconfig"
+      - src: "{{ dotfiles_dir }}/dot_config/fastfetch/config.jsonc"
+        dest: "{{ home_dir }}/.config/fastfetch/config.jsonc"
+      - src: "{{ dotfiles_dir }}/dot_config/ghostty/config"
+        dest: "{{ home_dir }}/.config/ghostty/config"
+      - src: "{{ dotfiles_dir }}/dot_config/helix/config.toml"
+        dest: "{{ home_dir }}/.config/helix/config.toml"
+      - src: "{{ dotfiles_dir }}/dot_config/helix/languages.toml"
+        dest: "{{ home_dir }}/.config/helix/languages.toml"
+      - src: "{{ dotfiles_dir }}/dot_config/scripts"
+        dest: "{{ home_dir }}/.config/scripts"
+        is_dir: true
+
+  tasks:
+    # 1. Verify Homebrew
+    - name: "Check Homebrew installation"
+      ansible.builtin.stat:
+        path: "{{ brew_bin }}"
+      register: brew_check
+      changed_when: false
+
+    - name: "Abort if Homebrew missing"
+      ansible.builtin.fail:
+        msg: "❌ Homebrew not found at {{ brew_bin }}. Install first: https://docs.brew.sh/Homebrew-on-Linux"
+      when: not brew_check.stat.exists
+
+    # 2. Dotfiles Repo (FIXED: `recursive` instead of `recurse_submodules`)
+    - name: "Clone or update dotfiles repository"
+      ansible.builtin.git:
+        repo: "https://github.com/Falcon-Super/dotfiles.git"
+        dest: "{{ dotfiles_dir }}"
+        update: yes
+        force: yes
+        recursive: yes
+
+    # 3. Brew Bundle
+    - name: "Install packages via Brewfile"
+      ansible.builtin.command:
+        cmd: "{{ brew_bin }} bundle --verbose --no-lock"
+        chdir: "{{ dotfiles_dir }}/Brew"
+      environment:
+        PATH: "{{ lookup('env', 'PATH') }}:{{ brew_bin | dirname }}"
+        HOMEBREW_NO_AUTO_UPDATE: "1"
+      changed_when: false
+      failed_when: false
+
+    # 4. Symlink Dotfiles
+    - name: "Ensure destination directories exist"
+      ansible.builtin.file:
+        path: "{{ item.dest | dirname }}"
+        state: directory
+        mode: "0755"
+      loop: "{{ dotfiles_symlinks }}"
+
+    - name: "Backup existing files before linking"
+      ansible.builtin.copy:
+        src: "{{ item.dest }}"
+        dest: "{{ item.dest }}.bak"
+        remote_src: yes
+      loop: "{{ dotfiles_symlinks }}"
+      when: ansible.builtin.stat(path=item.dest).stat.exists
+      ignore_errors: yes
+
+    - name: "Create symlinks"
+      ansible.builtin.file:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        state: "{{ 'directory' if item.is_dir | default(false) else 'link' }}"
+        force: yes
+      loop: "{{ dotfiles_symlinks }}"
+
+    # 5. Zsh & Plugins
+    - name: "Install Oh-My-Zsh if missing"
+      ansible.builtin.shell: |
+        sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+      args:
+        creates: "{{ zsh_dir }}/oh-my-zsh.sh"
+      environment:
+        RUNZSH: "no"
+        CHSH: "no"
+
+    - name: "Install Zsh plugins"
+      ansible.builtin.git:
+        repo: "{{ item.repo }}"
+        dest: "{{ zsh_custom }}/plugins/{{ item.name }}"
+        update: yes
+        depth: 1
+      loop:
+        - name: zsh-autosuggestions
+          repo: "https://github.com/zsh-users/zsh-autosuggestions"
+        - name: zsh-syntax-highlighting
+          repo: "https://github.com/zsh-users/zsh-syntax-highlighting.git"
+
+    # 6. Atuin
+    - name: "Install Atuin"
+      ansible.builtin.command:
+        cmd: "{{ brew_bin }} install atuin"
+      environment:
+        PATH: "{{ lookup('env', 'PATH') }}:{{ brew_bin | dirname }}"
+      changed_when: false
+      failed_when: false
+
+    - name: "Ensure Atuin init is in .zshrc"
+      ansible.builtin.lineinfile:
+        path: "{{ home_dir }}/.zshrc"
+        line: "{{ atuin_init }}"
+        state: present
+        insertafter: EOF
+
+    - name: "Summary"
+      ansible.builtin.debug:
+        msg: |
+          ✅ Setup complete.
+          🔄 Restart terminal: exec {{ brew_bin }}
+          🔍 Verify: chezmoi doctor → ansible-playbook ansible/setup.yml -v
+      changed_when: false

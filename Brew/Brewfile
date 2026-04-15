@@ -1,4 +1,6 @@
 tap "valkyrie00/bbrew"
+# Automate deployment, configuration, and upgrading
+brew "ansible"
 # Text processor and publishing toolchain for AsciiDoc
 brew "asciidoctor"
 # Code searching, linting, rewriting
@@ -148,6 +150,7 @@ vscode "shufo.vscode-blade-formatter"
 vscode "tomoki1207.pdf"
 vscode "vscode-icons-team.vscode-icons"
 vscode "yzhang.markdown-all-in-one"
+cargo "typst-cli"
 flatpak "app.drey.Warp"
 flatpak "app.katvan.Katvan"
 flatpak "app.zen_browser.zen"
@@ -171,7 +174,6 @@ flatpak "com.github.wwmm.easyeffects"
 flatpak "com.github.zocker_160.SyncThingy"
 flatpak "com.google.Chrome"
 flatpak "com.heroicgameslauncher.hgl"
-flatpak "com.hypixel.HytaleLauncher", remote: "hytalelauncher-origin"
 flatpak "com.jeffser.Alpaca"
 flatpak "com.jeffser.Pigment"
 flatpak "com.mattjakeman.ExtensionManager"
