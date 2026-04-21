@@ -111,5 +111,24 @@ source $ZSH/oh-my-zsh.sh
 # Example aliases
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
+# === HLEDGER CONFIGURATION ===
+export HLEDGER_FILE="$HOME/Finance/Ledger/main.journal"
+export HLEDGER_OPTS="-f $HLEDGER_FILE"
+
+# Simple aliases
+alias h='hledger $HLEDGER_OPTS'
+alias hadd='hledger add $HLEDGER_OPTS'
+alias hreg='hledger register $HLEDGER_OPTS'
+alias hbal='hledger balance $HLEDGER_OPTS'
+alias hinc='hledger incomestatement $HLEDGER_OPTS'
+alias hbs='hledger balancesheet $HLEDGER_OPTS'
+alias hcf='hledger cashflow $HLEDGER_OPTS'
+alias hui='hledger-ui $HLEDGER_OPTS'
+
+# Quick report shortcuts
+alias hmonth='hinc --monthly'
+alias hyear='hinc --yearly'
+alias hnow='hbal --now'
+# === END HLEDGER CONFIG ===
 eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 eval "$(atuin init zsh)"
